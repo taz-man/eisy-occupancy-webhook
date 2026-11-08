@@ -243,6 +243,63 @@ def test_new_token_changes_urls(ctrl):
     assert new in ctrl.poly.Notices['url_d_cabin'] and old not in ctrl.poly.Notices['url_d_cabin']
 
 
+# ------------------------------------------------- dismissed notices ----
+def test_restart_does_not_resurrect_dismissed_notices(tmp_path):
+    first = FakeCtrl(tmp_path)
+    start_with(first, DEVICES)
+    assert len(first.poly.Notices) == 3
+    # Plugin restarts: new process/poly, same persist dir; the installer had
+    # closed the notices so PG3 has none stored.
+    second = FakeCtrl(tmp_path)
+    start_with(second, DEVICES)
+    assert dict(second.poly.Notices) == {}
+    assert len(second.poly.nodes) == 4        # nodes are still rebuilt
+
+
+def test_restart_leaves_undismissed_notices_alone(tmp_path):
+    first = FakeCtrl(tmp_path)
+    start_with(first, DEVICES)
+    keep = dict(first.poly.Notices)
+    first.poly.Notices.clear = lambda: pytest.fail('must not clear unchanged notices')
+    od.on_start(first)                        # same process, nothing changed
+    assert dict(first.poly.Notices) == keep
+
+
+def test_rebuild_nodes_forces_notices_back(tmp_path):
+    first = FakeCtrl(tmp_path)
+    start_with(first, DEVICES)
+    second = FakeCtrl(tmp_path)
+    start_with(second, DEVICES)
+    assert dict(second.poly.Notices) == {}
+    od.do_sync(second, force=True)            # DISCOVER / Rebuild Nodes
+    assert set(second.poly.Notices) == {'url_d_tom_iphone', 'url_d_ann_iphone', 'url_d_cabin'}
+
+
+def test_changed_devices_or_secret_or_mode_are_published_on_restart(tmp_path):
+    first = FakeCtrl(tmp_path)
+    start_with(first, DEVICES)
+    # a device was added while the plugin was down / config changed
+    second = FakeCtrl(tmp_path)
+    start_with(second, DEVICES + [{'name': 'Garage'}])
+    assert 'url_d_garage' in second.poly.Notices
+    # response mode toggled changes every URL
+    third = FakeCtrl(tmp_path)
+    start_with(third, DEVICES + [{'name': 'Garage'}], respond=True)
+    assert '/response/' in third.poly.Notices['url_d_garage']
+    # New Secret always publishes, even after the notices were dismissed
+    third.poly.Notices.clear()
+    od.new_token(third)
+    assert 'url_d_garage' in third.poly.Notices
+
+
+def test_no_devices_notice_shown_on_every_start(tmp_path):
+    for _ in range(2):
+        c = FakeCtrl(tmp_path)
+        od.on_typed_data(c, {})
+        od.on_start(c)
+        assert 'config' in c.poly.Notices
+
+
 # ------------------------------------------------------------ webhooks ----
 def call(ctrl, **kw):
     return od.handle(ctrl, {'query': q(**kw)})

@@ -14,8 +14,17 @@ relay on my.isy.io.
 ## Setup
 1. Install and start the plugin.
 2. Open its configuration page and add your **Devices** (and, optionally, a **Location** for each, e.g. `Home`). Save.
-3. A node is created for every device and location. The configuration page shows a notice per device with two URLs: **IN** and **OUT**. These contain a secret, so treat them like a password.
+3. A node is created for every device and location. The plugin's overview/configuration page shows a notice per device with two URLs: **IN** and **OUT**. These contain a secret, so treat them like a password.
 4. Paste the IN URL into your app's *arrival* trigger and the OUT URL into its *departure* trigger. In Locative: choose GET, enable Trigger on Arrival/Departure.
+
+### Where do I find my URLs again?
+The IN/OUT URLs are shown as PG3 **notices**, not saved settings, so closing one only hides it. Nothing is lost.
+
+The notices are published when they are first created or when they change (a device is added, renamed or removed, the *Reply to webhook callers* setting is toggled, or you run **New Secret**). They are **not** recreated on an ordinary plugin restart, so a notice you have closed stays closed.
+
+To show them again at any time, press **Rebuild Nodes** (Discover) on the Occupancy controller node. The URLs themselves do not change unless you run **New Secret**; if you do, every URL changes and you must update them in your apps.
+
+If a notice instead reads "No devices configured", add at least one device in the plugin configuration and save.
 
 ## URL format
 ```
@@ -33,7 +42,7 @@ The portal endpoint does no authentication; this plugin rejects any call without
 * **Occupancy Location** - In when any member device is In. Read-only.
 
 ## Controller commands
-* **Rebuild Nodes** - re-read the device list and re-create nodes and notices.
+* **Rebuild Nodes** - re-read the device list, re-create nodes and show the URL notices again.
 * **New Secret** - generate a new secret. Every URL changes; re-enter them in your apps.
 
 ## Migrating from the portal Occupancy node server

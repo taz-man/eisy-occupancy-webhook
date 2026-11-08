@@ -1,5 +1,11 @@
 # License
 
+## Third-Party Attributions
+
+This plugin's development referenced the following licensed source(s). Attribution is provided per each source's own license terms -- review those terms directly before relying on or redistributing material from any of them:
+
+- [udi-poly-notification/README.md at master · UniversalDevicesInc-PG3/udi-poly-notification · GitHub](https://github.com/UniversalDevicesInc-PG3/udi-poly-notification/blob/master/README.md) -- License: MIT
+
 ## MIT License (this plugin's own code)
 
 Copyright (c) 2026 tazman

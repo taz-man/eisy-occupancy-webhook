@@ -8,3 +8,9 @@ Sources consulted: ISY Portal Node Server Occupancy & Locative app Instructions 
 
 Verified on a live eisy with MacroDroid GET calls: the WEBHOOK handler receives {'headers': {...}, 'query': {'occ','tok','st'}, 'body': ''} (query is a dict of strings, body is an empty string for a GET). Parser already handles this layout; no behaviour change. Device and location nodes updated correctly on in/out.
 
+## 2026-11-08T01:47:11.627644+00:00
+
+0.1.2 (docs): README section explaining the IN/OUT URL banners are dismissible PG3 notices. 0.1.3 (fix): the URL notices reappeared after every plugin restart even when dismissed, because start() always cleared and re-set them. publish_urls now stores a SHA-256 fingerprint of the notice set in persist/notices_fingerprint and skips republishing when unchanged. Republished on first run, when the device list/response setting/secret changes (fingerprint differs), and always (force=True) on Rebuild Nodes (DISCOVER) and New Secret (NEWTOKEN). The 'No devices configured' notice still shows on every start when applicable. README updated; 29 tests pass. Earlier regeneration attempts stopped at install.sh with EPERM (files owned by admin, tool running as plugin_3); this call re-ran after the developer chowned the files to plugin_3, completing context/sources/platform notification.
+
+Sources consulted: Polyglot v3 (PG3x) - Universal Devices Forum, eisy-ui 1.3.4 - Integrated plugins (Beta) - eisy-ui - Universal Devices Forum, Eisy:User Guide - Universal Devices, Inc. Wiki, ISY Developers - Universal Devices, Inc. Wiki, PG3 login requires my.isy.io authorization - Polyglot v3 (PG3x) - Universal Devices Forum, Migrate Notification to eisy UI - eisy-ui - Universal Devices Forum, Plugins - Universal Devices, udi-poly-notification/README.md at master · UniversalDevicesInc-PG3/udi-poly-notification · GitHub (MIT), Brand new eisy - cannot log in to PG3 - Polyglot v3 (PG3x) - Universal Devices Forum
+

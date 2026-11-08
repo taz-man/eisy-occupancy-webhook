@@ -3,6 +3,7 @@
 The controller's override bodies are thin wrappers around the functions in this
 module so that everything can be unit tested with a fake Interface.
 """
+import hashlib
 import hmac
 import json
 import os
@@ -17,6 +18,7 @@ Node = udi_interface.Node
 
 WEBHOOK_HOST = 'https://my.isy.io/api/eisy/pg3/webhook'
 SECRET_FILE = 'occupancy_secret'
+FINGERPRINT_FILE = 'notices_fingerprint'
 
 IN_WORDS = {'in', 'enter', 'entered', 'arrive', 'arrived', 'arrival', 'home',
             'present', 'true', 'on', '1', 'yes'}
@@ -259,27 +261,74 @@ def token_for(ctrl, new=False):
     return load_token(ctrl.persist_dir, new=new)
 
 
-def publish_urls(ctrl, plan):
+NO_DEVICES_NOTICE = ('No devices configured. Add your devices in the '
+                     'plugin configuration to get their In/Out URLs.')
+
+
+def notices_fingerprint(notices):
+    blob = '\n'.join('%s=%s' % (k, notices[k]) for k in sorted(notices))
+    return hashlib.sha256(blob.encode('utf-8')).hexdigest()
+
+
+def _fingerprint_path(ctrl):
+    return os.path.join(ctrl.persist_dir, FINGERPRINT_FILE)
+
+
+def _read_fingerprint(ctrl):
+    try:
+        with open(_fingerprint_path(ctrl)) as fh:
+            return fh.read().strip()
+    except OSError:
+        return ''
+
+
+def _write_fingerprint(ctrl, value):
+    try:
+        os.makedirs(ctrl.persist_dir, exist_ok=True)
+        with open(_fingerprint_path(ctrl), 'w') as fh:
+            fh.write(value)
+    except OSError as exc:  # worst case the notices are shown again next start
+        LOGGER.warning('Could not save notice fingerprint: %s', exc)
+
+
+def publish_urls(ctrl, plan, force=False):
+    """Show the IN/OUT URL notices.
+
+    Notices are persisted by PG3, so a notice the installer has dismissed must
+    not be recreated on every plugin restart. A fingerprint of the notice set is
+    kept in persist/; unless force is true the notices are only (re)published
+    when that fingerprint changed (first run, devices/secret/response mode
+    changed). Returns True when notices were published.
+    """
     poly = ctrl.poly
     state = ctx(ctrl)
-    token = token_for(ctrl)
-    base = webhook_base(poly.uuid, poly.profileNum, state['respond'])
+    if plan['devices']:
+        token = token_for(ctrl)
+        base = webhook_base(poly.uuid, poly.profileNum, state['respond'])
+        notices = {}
+        for addr, name, _loc in plan['devices']:
+            url_in, url_out = build_urls(base, addr, token)
+            notices['url_' + addr] = '%s -- IN: %s  OUT: %s' % (name, url_in, url_out)
+    else:
+        notices = {'config': NO_DEVICES_NOTICE}
+    fingerprint = notices_fingerprint(notices)
+    if not force and fingerprint == _read_fingerprint(ctrl):
+        LOGGER.info('Occupancy: URL notices unchanged, not republishing '
+                    '(use Rebuild Nodes to show them again).')
+        return False
     poly.Notices.clear()
-    if not plan['devices']:
-        poly.Notices['config'] = ('No devices configured. Add your devices in the '
-                                  'plugin configuration to get their In/Out URLs.')
-        return
-    for addr, name, _loc in plan['devices']:
-        url_in, url_out = build_urls(base, addr, token)
-        poly.Notices['url_' + addr] = '%s -- IN: %s  OUT: %s' % (name, url_in, url_out)
+    for key, text in notices.items():
+        poly.Notices[key] = text
+    _write_fingerprint(ctrl, fingerprint)
+    return True
 
 
-def do_sync(ctrl):
+def do_sync(ctrl, force=False):
     state = ctx(ctrl)
     if state['devices'] is None:
         return None
     plan = sync_nodes(ctrl.poly, ctrl.address, state['devices'])
-    publish_urls(ctrl, plan)
+    publish_urls(ctrl, plan, force=force)
     return plan
 
 
@@ -288,8 +337,7 @@ def on_start(ctrl):
     state['started'] = True
     token_for(ctrl)  # make sure a secret exists
     if state['devices'] is None:
-        ctrl.poly.Notices['config'] = ('No devices configured. Add your devices in the '
-                                       'plugin configuration to get their In/Out URLs.')
+        ctrl.poly.Notices['config'] = NO_DEVICES_NOTICE
         return
     do_sync(ctrl)
 
@@ -307,7 +355,7 @@ def on_typed_data(ctrl, params):
 def new_token(ctrl):
     token_for(ctrl, new=True)
     LOGGER.info('Occupancy secret regenerated; webhook URLs changed.')
-    do_sync(ctrl)
+    do_sync(ctrl, force=True)
 
 
 def handle(ctrl, data):

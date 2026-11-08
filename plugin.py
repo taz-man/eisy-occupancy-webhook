@@ -99,7 +99,7 @@ class Controller(udi_interface.Node):
 
     def discover(self, *args, **kwargs):
         from occ_device import do_sync
-        do_sync(self)
+        do_sync(self, force=True)
 
     def shortPoll(self, *args, **kwargs):
         pass
