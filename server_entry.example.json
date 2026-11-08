@@ -1,0 +1,16 @@
+{
+  "name": "Occupancy",
+  "developer": "you@example.com",
+  "author": "Your Name",
+  "purchaseOptions": [],
+  "type": "python3",
+  "executable": "main.py",
+  "runAs": "admin",
+  "install": "install.sh",
+  "desc": "Webhook-based presence/occupancy nodes (replacement for the UDI Portal Occupancy node server). Works with Locative, UD Mobile or any app that can call a URL.",
+  "discover": true,
+  "isyAccess": false,
+  "requireEisyui": false,
+  "shortPoll": 60,
+  "longPoll": 600
+}

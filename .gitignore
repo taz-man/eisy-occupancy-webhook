@@ -1,0 +1,19 @@
+# secrets / host identity -- never commit
+persist/
+plugin_*.key
+plugin_*.cert
+.iox_env
+server_entry.json
+# runtime
+logs/
+crash.log
+svc.pid
+NSplugin_*.lock
+# dev
+.venv/
+.vscode/
+__pycache__/
+.pytest_cache/
+
+*.pyc
+data/

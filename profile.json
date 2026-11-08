@@ -1,0 +1,134 @@
+{
+  "editors": [
+    {
+      "id": "occ",
+      "ranges": [
+        {
+          "uom": "2",
+          "subset": "0,1",
+          "names": {
+            "0": "Out",
+            "1": "In"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ED_CONTROLLER_ST",
+      "ranges": [
+        {
+          "subset": "0,1",
+          "uom": "25",
+          "names": {
+            "0": "Not Connected",
+            "1": "Connected"
+          }
+        }
+      ]
+    }
+  ],
+  "nodedefs": [
+    {
+      "id": "controller",
+      "name": "Occupancy",
+      "properties": [
+        {
+          "id": "ST",
+          "name": "Status",
+          "editor": "ED_CONTROLLER_ST"
+        }
+      ],
+      "cmds": {
+        "sends": [],
+        "accepts": [
+          {
+            "id": "DISCOVER",
+            "name": "Rebuild Nodes",
+            "native": "false"
+          },
+          {
+            "id": "NEWTOKEN",
+            "name": "New Secret",
+            "native": "false"
+          }
+        ]
+      },
+      "links": {
+        "ctl": [],
+        "rsp": []
+      }
+    },
+    {
+      "id": "occdev",
+      "name": "Occupancy Device",
+      "properties": [
+        {
+          "id": "ST",
+          "name": "Occupied",
+          "editor": "occ"
+        }
+      ],
+      "cmds": {
+        "sends": [
+          {
+            "id": "DON",
+            "name": "In",
+            "native": "true"
+          },
+          {
+            "id": "DOF",
+            "name": "Out",
+            "native": "true"
+          }
+        ],
+        "accepts": [
+          {
+            "id": "DON",
+            "name": "Set In",
+            "native": "true"
+          },
+          {
+            "id": "DOF",
+            "name": "Set Out",
+            "native": "true"
+          }
+        ]
+      },
+      "links": {
+        "ctl": [],
+        "rsp": []
+      }
+    },
+    {
+      "id": "occloc",
+      "name": "Occupancy Location",
+      "properties": [
+        {
+          "id": "ST",
+          "name": "Occupied",
+          "editor": "occ"
+        }
+      ],
+      "cmds": {
+        "sends": [
+          {
+            "id": "DON",
+            "name": "Occupied",
+            "native": "true"
+          },
+          {
+            "id": "DOF",
+            "name": "Vacant",
+            "native": "true"
+          }
+        ],
+        "accepts": []
+      },
+      "links": {
+        "ctl": [],
+        "rsp": []
+      }
+    }
+  ],
+  "linkdefs": []
+}
